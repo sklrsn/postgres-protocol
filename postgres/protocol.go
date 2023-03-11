@@ -92,3 +92,13 @@ func GetVersion(message []byte) int32 {
 	binary.Read(reader, binary.BigEndian, &code)
 	return code
 }
+
+func IsAuthenticationOk(message []byte) bool {
+	var msgLength int32
+	var authType int32
+	reader := bytes.NewReader(message[1:5])
+	binary.Read(reader, binary.BigEndian, &msgLength)
+	reader.Reset(message[5:9])
+	binary.Read(reader, binary.BigEndian, &authType)
+	return msgLength == 8 && AuthenticationOK == authType
+}
