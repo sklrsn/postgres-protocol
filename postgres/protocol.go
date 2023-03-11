@@ -6,8 +6,9 @@ import (
 )
 
 /**
- *  Frontend/Backend Protocol
- *	https://www.postgresql.org/docs/current/protocol.html
+ * Frontend/Backend Protocol
+ *
+ * https://www.postgresql.org/docs/current/protocol.html
  */
 
 /** Message Offset */
