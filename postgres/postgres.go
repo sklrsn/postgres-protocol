@@ -131,7 +131,6 @@ func (postgresProxy *PostgresProxy) UpgradeServerConnection() {
 		})
 }
 
-// TODO: required ?
 func (postgresProxy *PostgresProxy) ReceiveReverseSSLAckResponse() Packet {
 	p := postgresProxy.ReceiveMessage(postgresProxy.reverseConnection)
 	postgresProxy.C <- p
@@ -195,7 +194,6 @@ func (postgresProxy *PostgresProxy) HandleDBConnection() {
 		// Read response of frontend for the SSL acknowledgement
 		postgresProxy.ReceiveReverseSSLAckResponse()
 	}
-	//TODO: Handle multiple md5 authentication
 	// Send Password Request to frontend
 	postgresProxy.SendAuthenticationClearTextPasswordRequest()
 	// Read frontend password
@@ -241,7 +239,6 @@ func (postgresProxy *PostgresProxy) HandleDBConnection() {
 	}
 	// Send startup message
 	postgresProxy.SendStartupRequest()
-	//TODO: Handle md5
 	// Send password response
 	postgresProxy.SendPasswordResponse()
 	// Read response for the password message
