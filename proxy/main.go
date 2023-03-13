@@ -25,8 +25,6 @@ func main() {
 		log.Fatalf("%v", err)
 	}
 
-	//proxy := new(Proxy)
-
 	log.Println("listener is ready for connections at 8989")
 	for {
 		src, err := listener.Accept()
@@ -40,18 +38,22 @@ func main() {
 			if err != nil {
 				log.Fatal(err)
 			}
-			//proxy.HandleConnection(src, dst)
+
+			// proxy := new(Proxy)
+			// proxy.HandleConnection(src, dst)
 
 			postgresProxy := PostgresProxy{
-				ForwardConnection: DBConnection{
+				ForwardConnection: &DBConnection{
 					Conn:        dst,
 					username:    "postgres",
 					password:    "postgres",
 					database:    "postgres",
 					application: "psql",
+					C:           make(chan Packet, 1024),
 				},
-				ReverseConnection: DBConnection{
+				ReverseConnection: &DBConnection{
 					Conn: src,
+					C:    make(chan Packet, 1024),
 				},
 			}
 			postgresProxy.Connect()

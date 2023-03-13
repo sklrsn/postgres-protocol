@@ -53,8 +53,8 @@ const (
 )
 
 type PostgresProxy struct {
-	ForwardConnection DBConnection //Backend
-	ReverseConnection DBConnection //Frontend
+	ForwardConnection *DBConnection //Backend
+	ReverseConnection *DBConnection //Frontend
 	pmutex            sync.Mutex
 }
 
@@ -163,6 +163,11 @@ func (proxy *PostgresProxy) reverseConnection() {
 		proxy.ReverseConnection.sendSSLResponse(SSLAllowed)
 		// Upgrade tls server connection
 		if err := proxy.UpgradeReverseConnection(); err != nil {
+			_ = proxy.Close()
+		}
+		// Read startup message from frontend (one more time)
+		packet = proxy.ReverseConnection.ReceiveMessage()
+		if packet.Error != nil {
 			_ = proxy.Close()
 		}
 	}
