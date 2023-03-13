@@ -17,9 +17,9 @@ type PGConnection struct {
 	password    string
 	database    string
 	application string
+	cmutex      sync.Mutex
 	certFile    string
 	keyFile     string
-	cmutex      sync.Mutex
 }
 
 type Packet struct {
