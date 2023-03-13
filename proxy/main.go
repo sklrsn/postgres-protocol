@@ -55,7 +55,9 @@ func main() {
 					Conn: src,
 					C:    make(chan Packet, 2),
 				},
+				Done: make(chan struct{}, 2),
 			}
+
 			postgresProxy.Connect()
 
 			log.Printf("connected to postgres server at %v", dst.RemoteAddr().String())

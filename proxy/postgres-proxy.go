@@ -55,6 +55,7 @@ const (
 type PostgresProxy struct {
 	ForwardConnection *PGConnection //Backend
 	ReverseConnection *PGConnection //Frontend
+	Done              chan struct{}
 	pmutex            sync.Mutex
 }
 
@@ -105,7 +106,10 @@ func (proxy *PostgresProxy) forwardConnection() {
 			case packet := <-proxy.ForwardConnection.C:
 				if packet.Error != nil {
 					_ = proxy.Close()
+					return
 				}
+			case <-proxy.Done:
+				return
 			}
 		}
 	}()
@@ -151,7 +155,10 @@ func (proxy *PostgresProxy) reverseConnection() {
 			case packet := <-proxy.ReverseConnection.C:
 				if packet.Error != nil {
 					_ = proxy.Close()
+					return
 				}
+			case <-proxy.Done:
+				return
 			}
 		}
 	}()
@@ -229,6 +236,8 @@ func (proxy *PostgresProxy) Connect() {
 }
 
 func (proxy *PostgresProxy) Close() error {
+	proxy.Done <- struct{}{}
+
 	if err := proxy.ForwardConnection.Close(); err != nil {
 		return err
 	}
