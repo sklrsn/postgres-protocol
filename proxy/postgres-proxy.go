@@ -60,7 +60,7 @@ type PostgresProxy struct {
 }
 
 func (proxy *PostgresProxy) UpgradeReverseConnection() error {
-	crt, err := tls.LoadX509KeyPair("/opt/bin/proxy-crt.pem", "/opt/bin/proxy-key.pem")
+	crt, err := tls.LoadX509KeyPair(proxy.ReverseConnection.certFile, proxy.ReverseConnection.keyFile)
 	if err != nil {
 		return err
 	}
@@ -80,7 +80,7 @@ func (proxy *PostgresProxy) UpgradeReverseConnection() error {
 }
 
 func (proxy *PostgresProxy) UpgradeForwardConnection() error {
-	crt, err := tls.LoadX509KeyPair("/opt/bin/proxy-crt.pem", "/opt/bin/proxy-key.pem")
+	crt, err := tls.LoadX509KeyPair(proxy.ForwardConnection.certFile, proxy.ForwardConnection.keyFile)
 	if err != nil {
 		return err
 	}

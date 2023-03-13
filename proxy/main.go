@@ -50,10 +50,14 @@ func main() {
 					database:    "postgres",
 					application: "psql",
 					C:           make(chan Packet, 2),
+					certFile:    "/opt/bin/proxy-crt.pem",
+					keyFile:     "/opt/bin/proxy-key.pem",
 				},
 				ReverseConnection: &PGConnection{
-					Conn: src,
-					C:    make(chan Packet, 2),
+					Conn:     src,
+					C:        make(chan Packet, 2),
+					certFile: "/opt/bin/proxy-crt.pem",
+					keyFile:  "/opt/bin/proxy-key.pem",
 				},
 				Done: make(chan struct{}, 2),
 			}
