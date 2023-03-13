@@ -1,0 +1,36 @@
+services:
+  postgres:
+    build: postgres
+    environment:
+      - POSTGRES_HOST_AUTH_METHOD=password
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - PGDATA=/var/lib/postgresql/data/12/
+    ports:
+      - 5433:5432
+    command: postgres -c ssl=on -c ssl_cert_file=/var/lib/postgresql/server.crt -c ssl_key_file=/var/lib/postgresql/server.key -c ssl_ca_file=/var/lib/postgresql/root.crt
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  psql:
+    build: psql
+    environment:
+      - PGPASSWORD=postgres
+      - PGSSLMODE=require
+      - PGSSLCERT=/etc/ssl/psql-crt.pem
+      - PGSSLKEY=/etc/ssl/private/psql-key.pem
+    depends_on:
+      - proxy
+
+  proxy:
+    build: proxy
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - 8989:8989
+    environment:
+      - PGSSLMODE=require
