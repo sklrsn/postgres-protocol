@@ -49,11 +49,11 @@ func main() {
 					password:    "postgres",
 					database:    "postgres",
 					application: "psql",
-					C:           make(chan Packet, 1024),
+					C:           make(chan Packet, 2),
 				},
 				ReverseConnection: &DBConnection{
 					Conn: src,
-					C:    make(chan Packet, 1024),
+					C:    make(chan Packet, 2),
 				},
 			}
 			postgresProxy.Connect()

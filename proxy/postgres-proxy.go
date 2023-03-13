@@ -100,10 +100,12 @@ func (proxy *PostgresProxy) UpgradeForwardConnection() error {
 
 func (proxy *PostgresProxy) forwardConnection() {
 	go func() {
-		select {
-		case packet := <-proxy.ForwardConnection.C:
-			if packet.Error != nil {
-				_ = proxy.Close()
+		for {
+			select {
+			case packet := <-proxy.ForwardConnection.C:
+				if packet.Error != nil {
+					_ = proxy.Close()
+				}
 			}
 		}
 	}()
@@ -144,10 +146,12 @@ func (proxy *PostgresProxy) forwardConnection() {
 
 func (proxy *PostgresProxy) reverseConnection() {
 	go func() {
-		select {
-		case packet := <-proxy.ReverseConnection.C:
-			if packet.Error != nil {
-				_ = proxy.Close()
+		for {
+			select {
+			case packet := <-proxy.ReverseConnection.C:
+				if packet.Error != nil {
+					_ = proxy.Close()
+				}
 			}
 		}
 	}()
