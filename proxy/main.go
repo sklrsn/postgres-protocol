@@ -43,7 +43,7 @@ func main() {
 			// proxy.HandleConnection(src, dst)
 
 			postgresProxy := PostgresProxy{
-				ForwardConnection: &DBConnection{
+				ForwardConnection: &PGConnection{
 					Conn:        dst,
 					username:    "postgres",
 					password:    "postgres",
@@ -51,7 +51,7 @@ func main() {
 					application: "psql",
 					C:           make(chan Packet, 2),
 				},
-				ReverseConnection: &DBConnection{
+				ReverseConnection: &PGConnection{
 					Conn: src,
 					C:    make(chan Packet, 2),
 				},

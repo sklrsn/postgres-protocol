@@ -53,8 +53,8 @@ const (
 )
 
 type PostgresProxy struct {
-	ForwardConnection *DBConnection //Backend
-	ReverseConnection *DBConnection //Frontend
+	ForwardConnection *PGConnection //Backend
+	ReverseConnection *PGConnection //Frontend
 	pmutex            sync.Mutex
 }
 

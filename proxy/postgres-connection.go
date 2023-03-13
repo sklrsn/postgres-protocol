@@ -10,7 +10,7 @@ const (
 	FrontendApplicationNamePrivX = "privx"
 )
 
-type DBConnection struct {
+type PGConnection struct {
 	Conn        net.Conn
 	C           chan Packet
 	username    string
@@ -26,68 +26,68 @@ type Packet struct {
 	Length int
 }
 
-func (dbc *DBConnection) Close() error {
-	return dbc.Conn.Close()
+func (pg *PGConnection) Close() error {
+	return pg.Conn.Close()
 }
 
-func (dbc *DBConnection) SendMessage(msg []byte) Packet {
-	length, err := dbc.Conn.Write(msg)
+func (pg *PGConnection) SendMessage(msg []byte) Packet {
+	length, err := pg.Conn.Write(msg)
 	return Packet{Body: nil, Length: length, Error: err}
 }
 
-func (dbc *DBConnection) ReceiveMessage() Packet {
+func (pg *PGConnection) ReceiveMessage() Packet {
 	buffer := make([]byte, 4096)
-	length, err := dbc.Conn.Read(buffer)
+	length, err := pg.Conn.Read(buffer)
 	return Packet{Body: buffer, Length: length, Error: err}
 }
 
-func (dbc *DBConnection) sendStartupMessage() {
+func (pg *PGConnection) sendStartupMessage() {
 	params := make(map[string]string)
-	params[ConnectionAttributeApplicationName] = dbc.application
-	msg := CreateStartupMessage(dbc.username, dbc.password, params)
-	dbc.C <- dbc.SendMessage(msg)
+	params[ConnectionAttributeApplicationName] = pg.application
+	msg := CreateStartupMessage(pg.username, pg.password, params)
+	pg.C <- pg.SendMessage(msg)
 }
 
-func (dbc *DBConnection) sendPasswordResponse() {
-	msg := CreatePasswordResponseMessage(dbc.password)
-	dbc.C <- dbc.SendMessage(msg)
+func (pg *PGConnection) sendPasswordResponse() {
+	msg := CreatePasswordResponseMessage(pg.password)
+	pg.C <- pg.SendMessage(msg)
 }
 
-func (dbc *DBConnection) isAuthenticationOK(msg []byte) bool {
+func (pg *PGConnection) isAuthenticationOK(msg []byte) bool {
 	return len(msg) > 0 && IsAuthenticationOk(msg)
 }
 
-func (dbc *DBConnection) sendAuthenticationClearTextPasswordRequest() {
+func (pg *PGConnection) sendAuthenticationClearTextPasswordRequest() {
 	msg := AuthenticationClearTextPasswordRequestMessage()
-	dbc.C <- dbc.SendMessage(msg)
+	pg.C <- pg.SendMessage(msg)
 }
 
-func (dbc *DBConnection) sendAuthenticationOKResponse() {
+func (pg *PGConnection) sendAuthenticationOKResponse() {
 	message := AuthenticationOkResponseMessage()
-	dbc.C <- dbc.SendMessage(message)
+	pg.C <- pg.SendMessage(message)
 }
 
-func (dbc *DBConnection) sendParameterStatus(key, value string) {
+func (pg *PGConnection) sendParameterStatus(key, value string) {
 	message := ParameterStatusMessage(key, value)
-	dbc.C <- dbc.SendMessage(message)
+	pg.C <- pg.SendMessage(message)
 }
 
-func (dbc *DBConnection) sendBackendKeyData(pid, key int32) {
+func (pg *PGConnection) sendBackendKeyData(pid, key int32) {
 	message := BackendKeyDataMessage(pid, key)
-	dbc.C <- dbc.SendMessage(message)
+	pg.C <- pg.SendMessage(message)
 }
 
-func (dbc *DBConnection) sendReadyForQuery() {
+func (pg *PGConnection) sendReadyForQuery() {
 	message := ReadyForQueryMessage()
-	dbc.C <- dbc.SendMessage(message)
+	pg.C <- pg.SendMessage(message)
 }
 
-func (dbc *DBConnection) sendSSLRequest() {
+func (pg *PGConnection) sendSSLRequest() {
 	message := SSLRequestMessage()
-	dbc.C <- dbc.SendMessage(message)
+	pg.C <- pg.SendMessage(message)
 }
 
-func (dbc *DBConnection) sendSSLResponse(sslCode byte) {
+func (pg *PGConnection) sendSSLResponse(sslCode byte) {
 	message := SSLResponseMessage(sslCode)
-	dbc.C <- dbc.SendMessage(message)
+	pg.C <- pg.SendMessage(message)
 }
