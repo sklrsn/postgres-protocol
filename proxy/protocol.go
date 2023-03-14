@@ -104,8 +104,49 @@ func IsAuthenticationOk(message []byte) bool {
 	return msgLength == 8 && AuthenticationOK == authType
 }
 
+/** Connection Attributes */
 const (
 	ConnectionAttributeApplicationName = "application_name"
 	ConnectionAttributeUser            = "user"
 	ConnectionAttributeDatabase        = "database"
 )
+
+func GetStartupMessageAttributes(msg []byte) (m map[string]string) {
+	m = make(map[string]string)
+	buf := bytes.NewBuffer(msg)
+	bs := make([]byte, 4)
+	if _, err := buf.Read(bs); err != nil { //Message length
+		return //ignore
+	}
+	if _, err := buf.Read(bs); err != nil { //Message opcode
+		return //ignore
+	}
+	// Startup attributes (if any)
+	for {
+		key, err := buf.ReadString(0x00)
+		if err != nil || len(key) == 0 {
+			return
+		}
+		value, err := buf.ReadString(0x00)
+		if err != nil || len(value) == 0 {
+			return
+		}
+		m[key] = value
+	}
+}
+
+func GetPasswordFromPasswordMessage(msg []byte) (password string) {
+	buf := bytes.NewBuffer(msg)
+	if _, err := buf.ReadByte(); err != nil { //Message opcode
+		return //ignore
+	}
+	bs := make([]byte, 4)
+	if _, err := buf.Read(bs); err != nil { //Message length
+		return //ignore
+	}
+	password, err := buf.ReadString(0x00)
+	if err != nil {
+		return
+	}
+	return
+}

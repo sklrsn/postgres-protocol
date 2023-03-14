@@ -4,6 +4,8 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"io"
+	"math"
+	"math/rand"
 	"sync"
 )
 
@@ -212,7 +214,7 @@ func (proxy *PostgresProxy) reverseConnection() {
 	// Send Parameter Status
 	proxy.ReverseConnection.sendParameterStatus("TimeZone", "Etc/UTC")
 	// Send Backend KeyData
-	proxy.ReverseConnection.sendBackendKeyData(108, 304016105)
+	proxy.ReverseConnection.sendBackendKeyData(rand.Int31n(math.MaxInt32), rand.Int31n(math.MaxInt32))
 	// Send ReadyForQuery
 	proxy.ReverseConnection.sendReadyForQuery()
 }
