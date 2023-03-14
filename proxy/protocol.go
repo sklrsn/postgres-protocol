@@ -87,21 +87,27 @@ func GetMessageType(message []byte) byte {
 	return message[0]
 }
 
-func GetVersion(message []byte) int32 {
+func GetVersion(message []byte) (_ int32, err error) {
 	var code int32
 	reader := bytes.NewReader(message[4:8])
-	binary.Read(reader, binary.BigEndian, &code)
-	return code
+	if err = binary.Read(reader, binary.BigEndian, &code); err != nil {
+		return
+	}
+	return code, nil
 }
 
-func IsAuthenticationOk(message []byte) bool {
+func GetAuthenticationType(message []byte) (_ int32, err error) {
 	var msgLength int32
 	var authType int32
 	reader := bytes.NewReader(message[1:5])
-	binary.Read(reader, binary.BigEndian, &msgLength)
+	if err = binary.Read(reader, binary.BigEndian, &msgLength); err != nil {
+		return
+	}
 	reader.Reset(message[5:9])
-	binary.Read(reader, binary.BigEndian, &authType)
-	return msgLength == 8 && AuthenticationOK == authType
+	if err = binary.Read(reader, binary.BigEndian, &authType); err != nil {
+		return
+	}
+	return authType, nil
 }
 
 /** Connection Attributes */
@@ -116,10 +122,10 @@ func GetStartupMessageAttributes(msg []byte) (m map[string]string) {
 	buf := bytes.NewBuffer(msg)
 	bs := make([]byte, 4)
 	if _, err := buf.Read(bs); err != nil { //Message length
-		return //ignore
+		return
 	}
 	if _, err := buf.Read(bs); err != nil { //Message opcode
-		return //ignore
+		return
 	}
 	// Startup attributes (if any)
 	for {
@@ -135,16 +141,16 @@ func GetStartupMessageAttributes(msg []byte) (m map[string]string) {
 	}
 }
 
-func GetPasswordFromPasswordMessage(msg []byte) (password string) {
+func GetPasswordFromPasswordMessage(msg []byte) (password string, err error) {
 	buf := bytes.NewBuffer(msg)
-	if _, err := buf.ReadByte(); err != nil { //Message opcode
-		return //ignore
+	if _, err = buf.ReadByte(); err != nil { //Message opcode
+		return
 	}
 	bs := make([]byte, 4)
-	if _, err := buf.Read(bs); err != nil { //Message length
-		return //ignore
+	if _, err = buf.Read(bs); err != nil { //Message length
+		return
 	}
-	password, err := buf.ReadString(0x00)
+	password, err = buf.ReadString(0x00)
 	if err != nil {
 		return
 	}

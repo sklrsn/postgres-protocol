@@ -13,13 +13,19 @@ package main
  * The server then sends an appropriate authentication request message,
  *  to which the frontend must reply with an appropriate authentication response message (such as a password)
  */
-func CreatePasswordResponseMessage(password string) []byte {
+func CreatePasswordResponseMessage(password string) (_ []byte, err error) {
 	message := NewMessageBuffer()
-	message.WriteByte(MessageTypePasswordResponse)
-	message.WriteInt32(0)
-	message.WriteString(password)
+	if err = message.WriteByte(MessageTypePasswordResponse); err != nil {
+		return
+	}
+	if _, err = message.WriteInt32(0); err != nil {
+		return
+	}
+	if _, err = message.WriteString(password); err != nil {
+		return
+	}
 	message.ResetLength(PostgresMessageLengthOffset)
-	return message.Bytes()
+	return message.Bytes(), nil
 }
 
 /**
@@ -29,21 +35,39 @@ func CreatePasswordResponseMessage(password string) []byte {
  * This message includes the names of the user and of the database the user wants to connect to;
  * it also identifies the particular protocol version to be used
  */
-func CreateStartupMessage(username string, database string, options map[string]string) []byte {
+func CreateStartupMessage(username string, database string, options map[string]string) (_ []byte, err error) {
 	message := NewMessageBuffer()
-	message.WriteInt32(0)
-	message.WriteInt32(ProtocolVersion)
-	message.WriteString(ConnectionAttributeUser)
-	message.WriteString(username)
-	message.WriteString(ConnectionAttributeDatabase)
-	message.WriteString(database)
-	for option, value := range options {
-		message.WriteString(option)
-		message.WriteString(value)
+	if _, err = message.WriteInt32(0); err != nil {
+		return
 	}
-	message.WriteByte(0x00)
+	if _, err = message.WriteInt32(ProtocolVersion); err != nil {
+		return
+	}
+	if _, err = message.WriteString(ConnectionAttributeUser); err != nil {
+		return
+	}
+	if _, err = message.WriteString(username); err != nil {
+		return
+	}
+	if _, err = message.WriteString(ConnectionAttributeDatabase); err != nil {
+		return
+	}
+	if _, err = message.WriteString(database); err != nil {
+		return
+	}
+	for option, value := range options {
+		if _, err = message.WriteString(option); err != nil {
+			return
+		}
+		if _, err = message.WriteString(value); err != nil {
+			return
+		}
+	}
+	if err = message.WriteByte(0x00); err != nil {
+		return
+	}
 	message.ResetLength(PostgresMessageLengthOffsetStartup)
-	return message.Bytes()
+	return message.Bytes(), nil
 }
 
 /**
@@ -52,9 +76,13 @@ func CreateStartupMessage(username string, database string, options map[string]s
  * To initiate an SSL-encrypted connection, the frontend initially sends an SSLRequest message rather than a StartupMessage.
  * The server then responds with a single byte containing S or N, indicating that it is willing or unwilling to perform SSL, respectively.
  */
-func SSLRequestMessage() []byte {
+func SSLRequestMessage() (_ []byte, err error) {
 	message := NewMessageBuffer()
-	message.WriteInt32(8)
-	message.WriteInt32(SSLRequestCode)
-	return message.Bytes()
+	if _, err = message.WriteInt32(8); err != nil {
+		return
+	}
+	if _, err = message.WriteInt32(SSLRequestCode); err != nil {
+		return
+	}
+	return message.Bytes(), nil
 }

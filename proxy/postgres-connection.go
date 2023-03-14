@@ -46,50 +46,61 @@ func (pg *PGConnection) ReceiveMessage() Packet {
 func (pg *PGConnection) sendStartupMessage() {
 	params := make(map[string]string)
 	params[ConnectionAttributeApplicationName] = pg.application
-	msg := CreateStartupMessage(pg.username, pg.password, params)
+	msg, err := CreateStartupMessage(pg.username, pg.password, params)
+	pg.C <- Packet{Error: err}
 	pg.C <- pg.SendMessage(msg)
 }
 
 func (pg *PGConnection) sendPasswordResponse() {
-	msg := CreatePasswordResponseMessage(pg.password)
+	msg, err := CreatePasswordResponseMessage(pg.password)
+	pg.C <- Packet{Error: err}
 	pg.C <- pg.SendMessage(msg)
 }
 
 func (pg *PGConnection) isAuthenticationOK(msg []byte) bool {
-	return len(msg) > 0 && IsAuthenticationOk(msg)
+	authType, err := GetAuthenticationType(msg)
+	pg.C <- Packet{Error: err}
+	return AuthenticationOK == authType
 }
 
 func (pg *PGConnection) sendAuthenticationClearTextPasswordRequest() {
-	msg := AuthenticationClearTextPasswordRequestMessage()
+	msg, err := AuthenticationClearTextPasswordRequestMessage()
+	pg.C <- Packet{Error: err}
 	pg.C <- pg.SendMessage(msg)
 }
 
 func (pg *PGConnection) sendAuthenticationOKResponse() {
-	message := AuthenticationOkResponseMessage()
+	message, err := AuthenticationOkResponseMessage()
+	pg.C <- Packet{Error: err}
 	pg.C <- pg.SendMessage(message)
 }
 
 func (pg *PGConnection) sendParameterStatus(key, value string) {
-	message := ParameterStatusMessage(key, value)
+	message, err := ParameterStatusMessage(key, value)
+	pg.C <- Packet{Error: err}
 	pg.C <- pg.SendMessage(message)
 }
 
 func (pg *PGConnection) sendBackendKeyData(pid, key int32) {
-	message := BackendKeyDataMessage(pid, key)
+	message, err := BackendKeyDataMessage(pid, key)
+	pg.C <- Packet{Error: err}
 	pg.C <- pg.SendMessage(message)
 }
 
 func (pg *PGConnection) sendReadyForQuery() {
-	message := ReadyForQueryMessage()
+	message, err := ReadyForQueryMessage()
+	pg.C <- Packet{Error: err}
 	pg.C <- pg.SendMessage(message)
 }
 
 func (pg *PGConnection) sendSSLRequest() {
-	message := SSLRequestMessage()
+	message, err := SSLRequestMessage()
+	pg.C <- Packet{Error: err}
 	pg.C <- pg.SendMessage(message)
 }
 
 func (pg *PGConnection) sendSSLResponse(sslCode byte) {
-	message := SSLResponseMessage(sslCode)
+	message, err := SSLResponseMessage(sslCode)
+	pg.C <- Packet{Error: err}
 	pg.C <- pg.SendMessage(message)
 }

@@ -170,7 +170,10 @@ func (proxy *PostgresProxy) reverseConnection() {
 		_ = proxy.Close()
 	}
 	// Check SSL request or startup message
-	version := GetVersion(packet.Body)
+	version, err := GetVersion(packet.Body)
+	if err != nil {
+		_ = proxy.Close()
+	}
 	if SSLRequestCode == version {
 		// Send SSL allowed response to backend
 		proxy.ReverseConnection.sendSSLResponse(SSLAllowed)

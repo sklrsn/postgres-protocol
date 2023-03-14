@@ -39,9 +39,6 @@ func main() {
 				log.Fatal(err)
 			}
 
-			// proxy := new(Proxy)
-			// proxy.HandleConnection(src, dst)
-
 			postgresProxy := PostgresProxy{
 				ForwardConnection: &PGConnection{
 					Conn:        dst,
