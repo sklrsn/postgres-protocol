@@ -34,3 +34,4 @@ services:
       - 8989:8989
     environment:
       - PGSSLMODE=require
+    restart: always

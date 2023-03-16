@@ -4,8 +4,10 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"io"
+	"log"
 	"math"
 	"math/rand"
+	"net"
 	"sync"
 )
 
@@ -59,6 +61,7 @@ type PostgresProxy struct {
 	ReverseConnection *PGConnection //Frontend
 	Done              chan struct{}
 	pmutex            sync.Mutex
+	channelRecorder   ChannelRecorder
 }
 
 func (proxy *PostgresProxy) UpgradeReverseConnection() error {
@@ -226,17 +229,25 @@ func (proxy *PostgresProxy) Connect() {
 	proxy.forwardConnection()
 	proxy.reverseConnection()
 
+	proxy.transfer(proxy.ForwardConnection.Conn, proxy.ReverseConnection.Conn)
+	proxy.transfer(proxy.ReverseConnection.Conn, proxy.ForwardConnection.Conn)
+}
+
+func (proxy *PostgresProxy) transfer(src, dst net.Conn) {
 	go func() {
 		defer func() {
-			_ = proxy.Close()
+			_ = src.Close()
+			_ = dst.Close()
 		}()
-		_, _ = io.Copy(proxy.ForwardConnection.Conn, proxy.ReverseConnection.Conn)
-	}()
-	go func() {
-		defer func() {
-			_ = proxy.Close()
-		}()
-		_, _ = io.Copy(proxy.ReverseConnection.Conn, proxy.ForwardConnection.Conn)
+
+		go proxy.channelRecorder.Watch()
+		dest := io.MultiWriter(dst, proxy.channelRecorder)
+		n, err := io.Copy(dest, src)
+		if err != nil {
+			log.Fatal(err)
+			return
+		}
+		log.Printf("postgres-proxy: transferred %d bytes", n)
 	}()
 }
 
