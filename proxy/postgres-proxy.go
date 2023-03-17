@@ -229,25 +229,38 @@ func (proxy *PostgresProxy) Connect() {
 	proxy.forwardConnection()
 	proxy.reverseConnection()
 
-	proxy.transfer(proxy.ForwardConnection.Conn, proxy.ReverseConnection.Conn)
-	proxy.transfer(proxy.ReverseConnection.Conn, proxy.ForwardConnection.Conn)
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func() {
+		defer func() {
+			wg.Done()
+		}()
+		proxy.transfer(proxy.ForwardConnection.Conn, proxy.ReverseConnection.Conn)
+	}()
+
+	wg.Add(1)
+	go func() {
+		defer func() {
+			wg.Done()
+		}()
+		proxy.transfer(proxy.ReverseConnection.Conn, proxy.ForwardConnection.Conn)
+	}()
+	wg.Wait()
 }
 
 func (proxy *PostgresProxy) transfer(src, dst net.Conn) {
-	go func() {
-		defer func() {
-			_ = src.Close()
-			_ = dst.Close()
-		}()
-
-		go proxy.channelRecorder.Watch()
-		dest := io.MultiWriter(dst, proxy.channelRecorder)
-		n, err := io.Copy(dest, src)
-		if err != nil {
-			log.Println(err)
-		}
-		log.Printf("postgres-proxy: transferred %d bytes", n)
+	defer func() {
+		_ = src.Close()
+		_ = dst.Close()
 	}()
+
+	go proxy.channelRecorder.Watch()
+	dest := io.MultiWriter(dst, proxy.channelRecorder)
+	n, err := io.Copy(dest, src)
+	if err != nil {
+		log.Println(err)
+	}
+	log.Printf("postgres-proxy: transferred %d bytes", n)
 }
 
 func (proxy *PostgresProxy) Close() error {
