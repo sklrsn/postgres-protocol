@@ -244,8 +244,7 @@ func (proxy *PostgresProxy) transfer(src, dst net.Conn) {
 		dest := io.MultiWriter(dst, proxy.channelRecorder)
 		n, err := io.Copy(dest, src)
 		if err != nil {
-			log.Fatal(err)
-			return
+			log.Println(err)
 		}
 		log.Printf("postgres-proxy: transferred %d bytes", n)
 	}()
