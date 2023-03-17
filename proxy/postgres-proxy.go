@@ -105,7 +105,7 @@ func (proxy *PostgresProxy) UpgradeForwardConnection() error {
 	return nil
 }
 
-func (proxy *PostgresProxy) forwardConnection() {
+func (proxy *PostgresProxy) forwardConnectionHandshake() {
 	go func() {
 		for {
 			select {
@@ -167,7 +167,7 @@ func (proxy *PostgresProxy) forwardConnection() {
 	}
 }
 
-func (proxy *PostgresProxy) reverseConnection() {
+func (proxy *PostgresProxy) reverseConnectionHandshake() {
 	go func() {
 		for {
 			select {
@@ -240,8 +240,8 @@ func (proxy *PostgresProxy) reverseConnection() {
 }
 
 func (proxy *PostgresProxy) Connect() {
-	proxy.forwardConnection()
-	proxy.reverseConnection()
+	proxy.forwardConnectionHandshake()
+	proxy.reverseConnectionHandshake()
 
 	var wg sync.WaitGroup
 	wg.Add(1)
