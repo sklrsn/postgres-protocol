@@ -140,8 +140,21 @@ func (proxy *PostgresProxy) forwardConnection() {
 	if packet.Error != nil {
 		_ = proxy.Close()
 	}
-	// Send the clearText password response
-	proxy.ForwardConnection.sendPasswordResponse()
+
+	authType, err := GetAuthenticationType(packet.Body)
+	if err != nil {
+		_ = proxy.Close()
+	}
+	switch authType {
+	case AuthenticationClearTextPassword:
+		// Send the clearText password response
+		proxy.ForwardConnection.sendPasswordResponse()
+	default:
+		log.Println("auth type not supported")
+		_ = proxy.Close()
+		return
+	}
+
 	// Read backend's authentication response
 	packet = proxy.ForwardConnection.ReceiveMessage()
 	if packet.Error != nil {
