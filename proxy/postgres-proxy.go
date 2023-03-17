@@ -59,7 +59,8 @@ const (
 type PostgresProxy struct {
 	ForwardConnection *PGConnection //Backend
 	ReverseConnection *PGConnection //Frontend
-	Done              chan struct{}
+	forwardChannel    chan struct{}
+	reverseChannel    chan struct{}
 	pmutex            sync.Mutex
 	channelRecorder   ChannelRecorder
 }
@@ -113,7 +114,7 @@ func (proxy *PostgresProxy) forwardConnection() {
 					_ = proxy.Close()
 					return
 				}
-			case <-proxy.Done:
+			case <-proxy.forwardChannel:
 				return
 			}
 		}
@@ -175,7 +176,7 @@ func (proxy *PostgresProxy) reverseConnection() {
 					_ = proxy.Close()
 					return
 				}
-			case <-proxy.Done:
+			case <-proxy.reverseChannel:
 				return
 			}
 		}
@@ -277,7 +278,9 @@ func (proxy *PostgresProxy) transfer(src, dst net.Conn) {
 }
 
 func (proxy *PostgresProxy) Close() error {
-	proxy.Done <- struct{}{}
+	proxy.forwardChannel <- struct{}{}
+	proxy.reverseChannel <- struct{}{}
+	proxy.channelRecorder.Close()
 
 	if err := proxy.ForwardConnection.Close(); err != nil {
 		return err

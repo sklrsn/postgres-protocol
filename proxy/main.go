@@ -56,7 +56,8 @@ func main() {
 					certFile: "/opt/bin/proxy-crt.pem",
 					keyFile:  "/opt/bin/proxy-key.pem",
 				},
-				Done: make(chan struct{}, 2),
+				forwardChannel: make(chan struct{}, 2),
+				reverseChannel: make(chan struct{}, 2),
 				channelRecorder: ChannelRecorder{
 					C: make(chan []byte, 2048),
 				},

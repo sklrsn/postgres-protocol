@@ -3,10 +3,12 @@ package main
 import (
 	"encoding/hex"
 	"log"
+	"sync"
 )
 
 type ChannelRecorder struct {
-	C chan []byte
+	C         chan []byte
+	closeOnce sync.Once
 }
 
 func (cr ChannelRecorder) Write(data []byte) (int, error) {
@@ -25,4 +27,10 @@ func (cr ChannelRecorder) Watch() {
 			log.Printf("postgres-proxy: msg=%v", hex.Dump(data))
 		}
 	}
+}
+
+func (cr ChannelRecorder) Close() {
+	cr.closeOnce.Do(func() {
+		close(cr.C)
+	})
 }
