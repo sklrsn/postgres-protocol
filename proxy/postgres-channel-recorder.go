@@ -22,7 +22,10 @@ func (cr ChannelRecorder) Write(data []byte) (int, error) {
 func (cr ChannelRecorder) Watch() {
 	for {
 		select {
-		case data := <-cr.C:
+		case data, ok := <-cr.C:
+			if !ok {
+				return
+			}
 			log.Printf("postgres-proxy: transferred %v bytes", len(data))
 			log.Printf("postgres-proxy: msg=%v", hex.Dump(data))
 		}
