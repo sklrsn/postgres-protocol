@@ -66,10 +66,6 @@ type PostgresProxy struct {
 }
 
 func (proxy *PostgresProxy) UpgradeReverseConnection() error {
-	crt, err := tls.LoadX509KeyPair(proxy.ReverseConnection.certFile, proxy.ReverseConnection.keyFile)
-	if err != nil {
-		return err
-	}
 	ca, err := x509.SystemCertPool()
 	if err != nil {
 		return err
@@ -77,10 +73,16 @@ func (proxy *PostgresProxy) UpgradeReverseConnection() error {
 	proxy.ReverseConnection.Conn =
 		tls.Server(proxy.ReverseConnection.Conn, &tls.Config{
 			RootCAs:            ca,
-			Certificates:       []tls.Certificate{crt},
 			InsecureSkipVerify: true,
 			MinVersion:         tls.VersionTLS10,
 			MaxVersion:         tls.VersionTLS13,
+			GetCertificate: func(chi *tls.ClientHelloInfo) (*tls.Certificate, error) {
+				crt, err := tls.LoadX509KeyPair(proxy.ReverseConnection.certFile, proxy.ReverseConnection.keyFile)
+				if err != nil {
+					return nil, err
+				}
+				return &crt, err
+			},
 		})
 	return nil
 }
